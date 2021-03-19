@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    <h1>Booking</h1>
+    {% if (booking is empty) %}
+        <h2>There are no bookings with this code</h2>
+        <a href="{{ path('search_booking') }}">go back</a>
+
+        {% else %}
+        <div style="
+    padding: 1rem;
+    border: 2px solid black;
+    border-radius: 1em;
+    margin-bottom: 1rem;
+    display: flex;
+">
+            {{ booking.user.firstName }}<br>
+            {{ booking.class }}<br>
+            {{ booking.flight.beginAirport.name }}<br>
+            {{ booking.flight.destination.name }}<br>
+            {{ booking.flight.date|date("Y/m/j") }} {{ booking.flight.time|date("G:i:s T") }}<br>
+            €{{ booking.flight.price }}<br>
+            {% for seat in booking.seats %}
+                {{ seat.seat }}
+            {% endfor %}<br>
+            {{ booking.code }}<br>
+            {{ booking.status }}
+        </div>
+{% endif %}
+{% endblock %}

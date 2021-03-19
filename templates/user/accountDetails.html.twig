@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    <br>
+    <div class="card text-center">
+        <div class="card-body">
+            <h1 class="text-center">{{ user.firstname }} {{ user.lastname }}</h1>
+            <hr>
+            <strong>Email</strong>
+            <p>{{ user.email }}</p>
+            <strong>Gender</strong>
+            {% if user.gender == '' %}
+                <p>-</p>
+            {% endif %}
+            <p>{{ user.gender }}</p>
+            <strong>Address</strong>
+            <p>{{ user.address }}, {{ user.city }}</p>
+            <strong>Postal code</strong>
+            <p>{{ user.postalcode }}</p>
+        </div>
+        <a href="{{ path('edit_account',{'userId': user.id}) }}" class="btn btn-info">Edit</a>
+    </div>
+{% endblock %}

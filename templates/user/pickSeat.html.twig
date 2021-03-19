@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    <style>
+        #box {
+            display: flex;
+        }
+        #box>* {
+            flex: 1 1 70px
+        }
+    </style>
+    <h1 class="text-center">CHOOSE A SEAT <3</h1>
+    <div id="box" class="d-inline-flex flex-wrap justify-content-around">
+
+        {% set seatNumber = seats|length/3 %}
+        {% set seatNumber = seatNumber|round(0,'ceil') %}
+
+        {% for seat in seats %}
+            {% if booking.class == 'Business' and seat.seat < seatNumber%}
+
+            {% if seat.booking != null %}
+                <a class="btn btn-danger disabled" style="width: 4rem; margin: 2px">{{ seat.seat }}</a>
+            {% else %}
+                <a href="{{ path('processBooking',{'seatId': seat.id, 'bookingId': booking.id}) }}" class="btn btn-success" style="width: 6rem; margin: 2px">{{ seat.seat }}</a>
+            {% endif %}
+
+                {% elseif booking.class == 'Economy' and seat.seat > seatNumber%}
+                    {% if seat.booking != null %}
+                        <a class="btn btn-danger disabled" style="width: 4rem; margin: 2px">{{ seat.seat }}</a>
+                    {% else %}
+                        <a href="{{ path('processBooking',{'seatId': seat.id, 'bookingId': booking.id}) }}" class="btn btn-success" style="width: 6rem; margin: 2px">{{ seat.seat }}</a>
+                    {% endif %}
+            {% endif %}
+
+        {% endfor %}
+
+    </div>
+
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    <table class="table table-bordered table-dark">
+        <tr>
+            <th>name</th>
+            <th>location</th>
+            <th>status</th>
+            <th>change status</th>
+        </tr>
+        {% for airport in airports %}
+            <tr>
+                <td>{{ airport.name }}</td>
+                <td>{{ airport.city.name }}</td>
+
+                {% if airport.status == 'active' %}
+                    <td style="color: green">active</td>
+                {% else %}
+                    <td style="color: red">inactive</td>
+                {% endif %}
+
+                <td><a href="{{ path('status_change',{'airportId': airport.id}) }}" class="btn btn-info">toggle</a></td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

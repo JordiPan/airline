@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    <h1 class="text-center">Search your booking with the given code!</h1>
+    {{ form_start(form) }}
+    {{ form_widget(form) }}
+    <button class="btn btn-info" style="
+        width: 100%;
+        margin-top: 1em;
+" type="submit">Go</button>
+    {{ form_end(form) }}
+{% endblock %}

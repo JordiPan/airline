@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    <h1>Bookings</h1>
+    {% if (bookings is empty) %}
+        <h2>There are no bookings</h2>
+        <a href="{{ path('homepage') }}">go back</a>
+    {% else %}
+    <table  class="table table-bordered table-light">
+        <thead class="thead-dark">
+        <tr>
+            <th>Progenitor</th>
+            <th>Class</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Date</th>
+            <th>Price</th>
+            <th>Seat nr.</th>
+            <th>Code</th>
+            <th>Status</th>
+            <th>Action</th>
+            <th>Messages</th>
+        </tr>
+        </thead>
+
+                {% for booking in bookings %}
+        <tr>
+            <td>{{ booking.user.firstName }}</td>
+            <td>{{ booking.class }}</td>
+            <td>{{ booking.flight.beginAirport.name }}</td>
+            <td>{{ booking.flight.destination.name }}</td>
+            <td>{{ booking.flight.date|date("Y/m/j") }} {{ booking.flight.time|date("G:i:s T") }}</td>
+            <td>€{{ booking.flight.price }}</td>
+
+            <td>
+                {% for seat in booking.seats %}
+                    {{ seat.seat }}
+                {% endfor %}
+            </td>
+
+            <td>{{ booking.code }}</td>
+
+            {% if booking.status == 'cancelled' %}
+                <td class="text-warning">cancelled</td>
+                <td><a href="{{ path('delete_booking',{'bookingId': booking.id}) }}" class="btn btn-danger">delete</a></td>
+            {% else %}
+
+                <td>{{ booking.status }}</td>
+                <td><a href="{{ path('cancel_booking',{'bookingId': booking.id}) }}" class="btn btn-warning">cancel</a></td>
+            {% endif %}
+
+            <td class="text-warning">{{ booking.flightMessage }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+{% endblock %}

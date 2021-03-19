@@ -1,19 +1,102 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        {# Run `composer require symfony/webpack-encore-bundle`
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Welcome!{% endblock %}</title>
+    {# Run `composer require symfony/webpack-encore-bundle`
            and uncomment the following Encore helpers to start using Symfony UX #}
-        {% block stylesheets %}
-            {#{{ encore_entry_link_tags('app') }}#}
-        {% endblock %}
+    {% block stylesheets %}
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+        <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    {% endblock %}
 
-        {% block javascripts %}
-            {#{{ encore_entry_script_tags('app') }}#}
-        {% endblock %}
-    </head>
-    <body>
+    {% block javascripts %}
+        {#{{ encore_entry_script_tags('app') }}#}
+    {% endblock %}
+</head>
+<body>
+{% block nav %}
+    <nav class="navbar navbar-expand-md navbar-light bg-light">
+        <div class="navbar-brand">OwlAirlines</div>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                {% if is_granted("ROLE_ADMIN") %}
+                    <li class="nav-item">
+                        <a href="{{ path('admin_homepage') }}" class="nav-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ path('admin_flights') }}" class="nav-link">Flights</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ path('admin_airports') }}" class="nav-link">Airports</a>
+                    </li>
+                {% elseif is_granted("ROLE_CUSTOMER") %}
+                    <li class="nav-item">
+                        <a href="{{ path('homepage') }}" class="nav-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ path('user_bookings') }}" class="nav-link">Bookings</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a href="{{ path('homepage') }}" class="nav-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ path('search_booking') }}" class="nav-link">Search Booking</a>
+                    </li>
+                {% endif %}
+            </ul>
+
+            {% if app.user %}
+            Welcome, {{ app.user.firstName }} {{ app.user.lastName }}
+            {% endif %}
+
+            <ul class="navbar-nav ml-auto">
+                {% if is_granted("ROLE_CUSTOMER") %}
+                    <li class="nav-item">
+                        <a href="{{ path('account_details',{'userId': app.user.id}) }}" class="nav-link">Account</a>
+                    </li>
+                {% endif %}
+                {% if app.user %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('app_logout') }}">Logout</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('app_login') }}">Login/Register</a>
+                    </li>
+                {% endif %}
+
+            </ul>
+        </div>
+    </nav>
+{% endblock %}
+
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success">
+        {{ message }}
+    </div>
+{% endfor %}
+
+{% for message in app.flashes('error') %}
+    <div class="alert alert-warning">
+        {{ message }}
+    </div>
+{% endfor %}
+
+{% block carousel %}{% endblock %}
+    <div class="container">
         {% block body %}{% endblock %}
-    </body>
+    </div>
+</body>
+<footer class="fixed-bottom">
+    <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.5);">
+        © 2021 Copyright: Jordi Pan
+    </div>
+</footer>
 </html>

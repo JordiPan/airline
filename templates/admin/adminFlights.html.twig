@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    <h1 class="text-center">Flights</h1>
+    {% for flight in flights %}
+    <div style="
+    display: inline-block;
+    background-color: aquamarine;
+    padding: 1rem;
+    border: 2px solid black;
+    border-radius: 1rem;
+    margin: 0.5rem;
+">
+        {{ flight.beginAirport.name }} ->
+        {{ flight.destination.name }}
+        {{ flight.date|date("Y/m/j") }}
+        {{ flight.time|date("G:i:s T") }} <br>
+        <div class="text-center">Status: {{ flight.status }}</div>
+        <div class="text-center">€{{ flight.price }}</div>
+        <a href="{{ path('edit_flight',{'flightId': flight.id}) }}" class="btn btn-info">edit</a>
+    </div>
+    {% endfor %}
+    <br>
+    <a href="{{ path('add_flight') }}" class="btn btn-success">add</a>
+{% endblock %}
