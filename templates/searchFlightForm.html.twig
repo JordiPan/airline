@@ -30,16 +30,7 @@
 ">
         <h1 class="text-center">Find your trip to paradise!</h1>
         {{ form_start(form) }}
-        <div style="display: inline-block" id="returnTrip">
-            <input type="radio" value="returnTrip" name="trip" id="returnTrip" checked onclick="two()">
-            <label for="returnTrip">Return trip</label>
-        </div>
-
-        <div style="display: inline-block" id="oneWay">
-            <input type="radio" value="oneWay" name="trip" id="oneWay" onclick="one()">
-            <label for="oneWay">One way</label>
-        </div>
-
+        {{ form_row(form.trip,{'id': 'trip'}) }}
         <div class="row">
             <div class="col">
                 {{ form_row(form.beginAirport) }}
@@ -59,19 +50,24 @@
     </div>
 
     <script>
-        function one() {
-            let el = document.getElementById('returnDate');
-            let date = document.getElementById('returnValue');
-            date.required = false;
-            date.value = '';
+        let type = document.getElementById('trip');
 
-            el.style.display = 'none';
-        }
-        function two() {
-            let el = document.getElementById('returnDate');
-            let date = document.getElementById('returnValue');
-            date.required = true;
-            el.style.display = 'block';
-        }
+        type.addEventListener('change', function () {
+           let option = type.options[type.selectedIndex].text;
+           let el = document.getElementById('returnDate');
+
+           if (option === 'Return trip') {
+               let date = document.getElementById('returnValue');
+               date.required = true;
+               date.valueAsDate = new Date();
+               el.style.display = 'block';
+           }
+           else if(option === 'One way') {
+               let date = document.getElementById('returnValue');
+               date.required = false;
+               date.value = null;
+               el.style.display = 'none';
+           }
+        });
     </script>
 {% endblock %}

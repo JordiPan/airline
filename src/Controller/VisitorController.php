@@ -27,24 +27,21 @@ class VisitorController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
-            $session = $request->getSession();
 
-            if ($data['returnDate'] != null) {
-                $session->start();
-                $session->set('returnDate',$data['returnDate']);
+            if ($data['returnDate'] == null) {
+                $returnDate = $data['returnDate'];
             }
-
-
-
-            $r = $this->getDoctrine()->getRepository(Flight::class);
-            $flights = $r->findBy([
-                'beginAirport' => $data['beginAirport'],
-                'destination' => $data['destination'],
-                'date' => $data['date'],
-                'status' => 'active'
+            else {
+                $returnDate = $data['returnDate']->format('Y-m-j');
+            }
+            return $this->redirectToRoute('compare', [
+                'beginAirport' => $data['beginAirport']->getId(),
+                'destination' => $data['destination']->getId(),
+                'date' => $data['date']->format('Y-m-j'),
+                'returnDate' => $returnDate,
+                'trip' => $data['trip'],
             ]);
-
-            return $this->render('searchFlightResults.html.twig',['flights' => $flights]);
+//            return $this->render('searchFlightResults.html.twig',['flights' => $flights]);
         }
         return $this->render('searchFlightForm.html.twig',[
             'form' => $form->createView()

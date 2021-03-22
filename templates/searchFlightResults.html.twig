@@ -1,28 +1,30 @@
 {% extends 'base.html.twig' %}
 {% block body %}
     <h1>Flight list</h1>
-    {% if flights is empty %}
-        <h2>No flights were found.. :c</h2>
-        <a href="{{ path('homepage') }}">go back</a>
-    {% else %}
-    {% for flight in flights %}
+    {% if flights %}
+        {% for flight in flights %}
 
-        <div style="
+            <div style="
     padding: 1rem;
     border: 2px solid black;
     border-radius: 1em;
     margin-bottom: 1rem;
     display: flex;
 ">
-            From: {{ flight.beginAirport.name }} <br>
-            To: {{ flight.destination.name }} <br>
-            Date: {{ flight.date|date("Y/m/j") }} {{ flight.time|date("G:i:s T") }} <br>
-            €{{ flight.price }}
+                From: {{ flight.beginAirport.name }} <br>
+                To: {{ flight.destination.name }} <br>
+                Date: {{ flight.date|date("Y/m/j") }} {{ flight.time|date("G:i:s T") }} <br>
+                €{{ flight.price }}
 
-            {% if is_granted("ROLE_CUSTOMER") %}
-            <a href="{{ path('make_booking',{'flightId': flight.id}) }}">make booking</a>
-            {% endif %}
-        </div>
-    {% endfor %}
+                {% if is_granted("ROLE_CUSTOMER") %}
+                    <a href="{{ path('make_booking',{'flightId': flight.id}) }}">make booking</a>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+    {% else %}
+        <h2>No flights were found.. :c</h2>
+        <a href="{{ path('homepage') }}">go back</a>
     {% endif %}
+
 {% endblock %}

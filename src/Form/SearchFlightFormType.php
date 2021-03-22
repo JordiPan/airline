@@ -19,6 +19,12 @@ class SearchFlightFormType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
+            ->add('trip', ChoiceType::class,[
+                'choices' => [
+                    'Return trip' => 'return',
+                    'One way' => 'oneWay'
+                ]
+            ])
             ->add('beginAirport', EntityType::class,[
                 'class' => Airport::class,
                 'choice_label' => 'name'
@@ -28,10 +34,13 @@ class SearchFlightFormType extends AbstractType
                 'choice_label' => 'name'
             ])
             ->add('date',DateType::class,[
-                'widget' => 'single_text'
+                'widget' => 'single_text',
+                'data' => new \DateTime()
             ])
             ->add('returnDate', DateType::class,[
                 'widget' => 'single_text',
+                'required' => false,
+                'data' => new \DateTime()
             ])
         ;
     }
