@@ -146,8 +146,10 @@ class AdminController extends AbstractController
 
             foreach ($bookings as $booking) {
                 if ($booking->getFlight() == $flight && $booking->getStatus() != 'cancelled') {
-
-                    $booking->setFlightMessage('flight date/time changed');
+                    
+                    if ($booking->getFlight()->getDate() != $flight->getDate()) {
+                        $booking->setFlightMessage('flight date/time changed');
+                    }
 
                     $em->persist($booking);
                 }

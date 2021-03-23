@@ -27,7 +27,6 @@ class VisitorController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
-
             if ($data['returnDate'] == null) {
                 $returnDate = $data['returnDate'];
             }

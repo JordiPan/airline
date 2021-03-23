@@ -5,53 +5,81 @@
         <h2>There are no bookings</h2>
         <a href="{{ path('homepage') }}">go back</a>
     {% else %}
-    <table  class="table table-bordered table-light">
-        <thead class="thead-dark">
-        <tr>
-            <th>Progenitor</th>
-            <th>Class</th>
-            <th>From</th>
-            <th>To</th>
-            <th>Date</th>
-            <th>Price</th>
-            <th>Seat nr.</th>
-            <th>Code</th>
-            <th>Status</th>
-            <th>Action</th>
-            <th>Messages</th>
-        </tr>
-        </thead>
 
-                {% for booking in bookings %}
-        <tr>
-            <td>{{ booking.user.firstName }}</td>
-            <td>{{ booking.class }}</td>
-            <td>{{ booking.flight.beginAirport.name }}</td>
-            <td>{{ booking.flight.destination.name }}</td>
-            <td>{{ booking.flight.date|date("Y/m/j") }} {{ booking.flight.time|date("G:i:s T") }}</td>
-            <td>€{{ booking.flight.price }}</td>
 
-            <td>
-                {% for seat in booking.seats %}
-                    {{ seat.seat }}
-                {% endfor %}
-            </td>
+        {% for booking in bookings %}
+            {% set counter = 0%}
+            {% set seatNr = null %}
+            <div class="card text-center" style="margin-bottom: 1rem">
+                <div class="card-body">
+                    <h1>Bookingscode: {{ booking.code }}</h1>
+                    <strong>Class</strong>
+                    <p>{{ booking.class }}</p>
+                    <strong>Flight</strong>
+                    <p>{{ booking.flight.beginAirport.name }} --> {{ booking.flight.destination.name }}</p>
+                    <strong>Date</strong>
+                    <p>{{ booking.flight.date|date("Y/m/j") }} {{ booking.flight.time|date("G:i:s T") }}</p>
+                    <strong>Price</strong>
+                    <p>€{{ booking.flight.price }}</p>
+                    <strong>Seat nr.</strong>
+                    <p>
+                        {% for seat in booking.seats %}
 
-            <td>{{ booking.code }}</td>
+                            {% if counter == 0 %}
+                                {{ seat.seat }}
 
-            {% if booking.status == 'cancelled' %}
-                <td class="text-warning">cancelled</td>
-                <td><a href="{{ path('delete_booking',{'bookingId': booking.id}) }}" class="btn btn-danger">delete</a></td>
-            {% else %}
+                                {% set seatNr =  seat.seat %}
+                                {% set counter = 1%}
+                            {% endif %}
+                        {% endfor %}
+                    </p>
+                    <strong>Flight message</strong>
+                    <p class="text-warning">{{ booking.flightMessage }}</p>
 
-                <td>{{ booking.status }}</td>
-                <td><a href="{{ path('cancel_booking',{'bookingId': booking.id}) }}" class="btn btn-warning">cancel</a></td>
-            {% endif %}
+                    <strong>Status</strong>
+                    {% if booking.status == 'cancelled' %}
+                        <p class="text-warning">cancelled</p>
+                        <a href="{{ path('delete_booking',{'bookingId': booking.id}) }}" class="btn btn-danger">delete</a>
+                    {% else %}
+                        <p class="text-success">{{ booking.status }}</p>
+                        <a href="{{ path('cancel_booking',{'bookingId': booking.id}) }}" class="btn btn-warning">cancel</a>
+                    {% endif %}
+                    {% if booking.returnFlight %}
+                        <hr>
+                        <h1>Return trip</h1>
+                        <strong>Flight</strong>
+                        <p>{{ booking.returnFlight.beginAirport.name }} --> {{ booking.returnFlight.destination.name }}</p>
+                        <strong>Date</strong>
+                        <p>{{ booking.returnFlight.date|date("Y/m/j") }} {{ booking.returnFlight.time|date("G:i:s T") }}</p>
+                        <strong>Price</strong>
+                        <p>€{{ booking.returnFlight.price }}</p>
+                        <strong>Seat nr.</strong>
+                        <p>
+                            {% for seat in booking.seats %}
+                                {% if seatNr != seat.seat %}
+                                    {{ seat.seat }}
+                                {% endif %}
+                            {% endfor %}
+                        </p>
+                        <strong>Status</strong>
 
-            <td class="text-warning">{{ booking.flightMessage }}</td>
-        </tr>
+                        <strong>Flight message</strong>
+                        <p class="text-warning">{{ booking.flightMessage }}</p>
+
+                        <strong>Status</strong>
+                        {% if booking.status == 'cancelled' %}
+                            <p class="text-warning">cancelled</p>
+                            <a href="{{ path('delete_booking',{'bookingId': booking.id}) }}" class="btn btn-danger">delete</a>
+                        {% else %}
+                            <p class="text-success">{{ booking.status }}</p>
+                            <a href="{{ path('cancel_booking',{'bookingId': booking.id}) }}" class="btn btn-warning">cancel</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
         {% endfor %}
-    </table>
+
     {% endif %}
 
 {% endblock %}

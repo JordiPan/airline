@@ -58,30 +58,33 @@ class UserController extends AbstractController
         $r= $this->getDoctrine()->getRepository(Flight::class);
         $flight = $r->findOneBy(['id' => $flightId]);
         $session = $request->getSession();
+        $em = $this->getDoctrine()->getManager();
 
         $form = $this->createForm(BookingFormType::class, $booking);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $em = $this->getDoctrine()->getManager();
+        if ($session->has('hasLooped') && $session->get('hasLooped') == true) {
+            $re = $this->getDoctrine()->getRepository(Booking::class);
+            $booking = $re->findOneBy(['id' => $session->get('beginBooking')->getId()]);
 
-            $booking->setCode(uniqid());
-            $booking->setStatus('ongoing');
-            $booking->setUser($this->getUser());
-
-            if ($session->has('hasLooped') && $session->get('hasLooped') == true) {
-                $booking->setFlight($session->get('beginFlight'));
-                $booking->setReturnFlight($flight);
-                $session->clear();
-            }
-            else {
-                $booking->setFlight($flight);
-            }
-
+            $booking->setReturnFlight($flight);
             $em->persist($booking);
             $em->flush();
+            $session->clear();
 
             return $this->redirectToRoute('pick_seat',['bookingId' => $booking->getId(), 'flightId' => $flightId]);
+        }
+        else {
+            if ($form->isSubmitted() && $form->isValid()) {
+                $booking->setCode(uniqid());
+                $booking->setStatus('ongoing');
+                $booking->setUser($this->getUser());
+                $booking->setFlight($flight);
+
+                $em->persist($booking);
+                $em->flush();
+                return $this->redirectToRoute('pick_seat',['bookingId' => $booking->getId(), 'flightId' => $flightId]);
+            }
         }
 
         return $this->render('user/form.html.twig',[
@@ -124,7 +127,7 @@ class UserController extends AbstractController
 
         if ($session->has('returnFlights')) {
             $session->set('hasLooped', true);
-            $session->set('beginFlight', $booking->getFlight());
+            $session->set('beginBooking', $booking);
 
             return $this->render('searchFlightResults.html.twig',[
                 'flights' => $session->get('returnFlights')
@@ -208,7 +211,7 @@ class UserController extends AbstractController
     public function compare(RequestStack $request)
     {
         $session = new Session();
-        $session->clear();
+
         $em = $this->getDoctrine()->getManager();
 
         $query = $request->getCurrentRequest()->query;
@@ -221,7 +224,10 @@ class UserController extends AbstractController
         if($trip == "oneWay") {
             // 1 vlucht
             $flights = $em->getRepository(Flight::class)->findBy(["beginAirport"=>$beginAirport,"destination"=>$destination,"date"=> new \DateTime($date),'status' => 'active']);
+            $session->remove('returnFlights');
+            $session->remove('hasLooped');
             return $this->render('searchFlightResults.html.twig',['flights' => $flights]);
+
         }
         else {
             // 2 vluchten
