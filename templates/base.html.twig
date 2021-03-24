@@ -18,7 +18,7 @@
 </head>
 <body>
 {% block nav %}
-    <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top">
+    <nav class="navbar navbar-expand-md navbar-light bg-light">
         <div class="navbar-brand">OwlAirlines</div>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -41,6 +41,9 @@
                     </li>
                     <li class="nav-item">
                         <a href="{{ path('user_bookings') }}" class="nav-link">Bookings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ path('groups') }}" class="nav-link">Groups</a>
                     </li>
                 {% else %}
                     <li class="nav-item">
@@ -77,6 +80,7 @@
     </nav>
 {% endblock %}
 
+
 {% for message in app.flashes('success') %}
     <div class="alert alert-success">
         {{ message }}
@@ -89,14 +93,12 @@
     </div>
 {% endfor %}
 
+
+
+
 {% block carousel %}{% endblock %}
     <div class="container">
         {% block body %}{% endblock %}
     </div>
 </body>
-<footer class="fixed-bottom">
-    <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.5); color: white">
-        © 2021 Copyright: Jordi Pan
-    </div>
-</footer>
 </html>

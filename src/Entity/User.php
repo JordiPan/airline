@@ -76,9 +76,21 @@ class User implements UserInterface
      */
     private $dateOfBirth;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Group::class, mappedBy="founder")
+     */
+    private $groups;
+
+    /**
+     * @ORM\OneToMany(targetEntity=GroupCustomer::class, mappedBy="user")
+     */
+    private $groupCustomers;
+
     public function __construct()
     {
         $this->bookings = new ArrayCollection();
+        $this->groups = new ArrayCollection();
+        $this->groupCustomers = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -272,6 +284,66 @@ class User implements UserInterface
     public function setDateOfBirth(\DateTimeInterface $dateOfBirth): self
     {
         $this->dateOfBirth = $dateOfBirth;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Group[]
+     */
+    public function getGroups(): Collection
+    {
+        return $this->groups;
+    }
+
+    public function addGroup(Group $group): self
+    {
+        if (!$this->groups->contains($group)) {
+            $this->groups[] = $group;
+            $group->setFounder($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGroup(Group $group): self
+    {
+        if ($this->groups->removeElement($group)) {
+            // set the owning side to null (unless already changed)
+            if ($group->getFounder() === $this) {
+                $group->setFounder(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|GroupCustomer[]
+     */
+    public function getGroupCustomers(): Collection
+    {
+        return $this->groupCustomers;
+    }
+
+    public function addGroupCustomer(GroupCustomer $groupCustomer): self
+    {
+        if (!$this->groupCustomers->contains($groupCustomer)) {
+            $this->groupCustomers[] = $groupCustomer;
+            $groupCustomer->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGroupCustomer(GroupCustomer $groupCustomer): self
+    {
+        if ($this->groupCustomers->removeElement($groupCustomer)) {
+            // set the owning side to null (unless already changed)
+            if ($groupCustomer->getUser() === $this) {
+                $groupCustomer->setUser(null);
+            }
+        }
 
         return $this;
     }

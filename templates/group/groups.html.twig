@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+
+    <h1>Groups</h1>
+    <table class="table table-bordered table-dark">
+        <thead>
+        <tr>
+            <th>group name</th>
+            <th>participants</th>
+            <th>action</th>
+        </tr>
+        </thead>
+       <tbody>
+       {% for group in better %}
+           <tr>
+               <td>{{ group.name }}</td>
+               <td>
+                   {% for member in group.groupCustomers %}
+                       {{ member.user.email }} <br>
+                   {% endfor %}
+               </td>
+               <td><a href="{{ path('add_to_group', {'groupId': group.id}) }}">Add members</a></td>
+           </tr>
+       {% endfor %}
+       </tbody>
+    </table>
+    <a href="{{ path('user_groups') }}" class="btn btn-primary">Create group</a>
+{% endblock %}

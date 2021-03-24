@@ -24,9 +24,18 @@ class VisitorController extends AbstractController
     {
         $form = $this->createForm(SearchFlightFormType::class);
         $form->handleRequest($request);
-
+        $session = $request->getSession();
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
+
+            //remembers the group that has been picked
+            if ($data['group'] != null) {
+                $session->set('groupId', $data['group']->getId());
+            }
+            else {
+                $session->remove('groupId');
+            }
+
             if ($data['returnDate'] == null) {
                 $returnDate = $data['returnDate'];
             }

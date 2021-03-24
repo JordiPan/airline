@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\Airport;
 use App\Entity\Flight;
+use App\Entity\Group;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ButtonType;
@@ -44,7 +45,16 @@ class SearchFlightFormType extends AbstractType
                 'required' => false,
                 'data' => new \DateTime()
             ])
-            ->add('group_size', IntegerType::class)
+            ->add('alone_or_group', ChoiceType::class,[
+                'choices'=> [
+                    'group' => 'group',
+                    'alone' => 'alone',
+                ]
+            ])
+            ->add('group', EntityType::class,[
+                'class' => Group::class,
+                'choice_label' => 'name',
+            ])
         ;
     }
 

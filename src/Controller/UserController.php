@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Booking;
 use App\Entity\Flight;
+use App\Entity\Group;
 use App\Entity\Seat;
 use App\Entity\User;
 use App\Form\BookingFormType;
@@ -63,27 +64,49 @@ class UserController extends AbstractController
         $form = $this->createForm(BookingFormType::class, $booking);
         $form->handleRequest($request);
 
-        if ($session->has('hasLooped') && $session->get('hasLooped') == true) {
+        if ($session->has('hasLooped') && $session->get('hasLooped') == true && !$session->has('group')) {
             $re = $this->getDoctrine()->getRepository(Booking::class);
             $booking = $re->findOneBy(['id' => $session->get('beginBooking')->getId()]);
-
             $booking->setReturnFlight($flight);
             $em->persist($booking);
             $em->flush();
             $session->clear();
 
-            return $this->redirectToRoute('pick_seat',['bookingId' => $booking->getId(), 'flightId' => $flightId]);
+            return $this->redirectToRoute('pick_seat',['bookingId' => $booking->getId(), 'flightId' => $flightId, 'group' => 0]);
         }
+
         else {
             if ($form->isSubmitted() && $form->isValid()) {
-                $booking->setCode(uniqid());
-                $booking->setStatus('ongoing');
-                $booking->setUser($this->getUser());
-                $booking->setFlight($flight);
+                //If there is a group it will make bookings for every user in the group
+                if ($session->has('groupId')) {
+                    $rep = $this->getDoctrine()->getRepository(Group::class);
+                    $group = $rep->findOneBy(['id' => $session->get('groupId')]);
 
-                $em->persist($booking);
-                $em->flush();
-                return $this->redirectToRoute('pick_seat',['bookingId' => $booking->getId(), 'flightId' => $flightId]);
+                    $array = [];
+                    foreach ($group->getGroupCustomers() as $user) {
+                        $groupBooking = new Booking();
+                        $groupBooking->setCode(uniqid());
+                        $groupBooking->setStatus('ongoing');
+                        $groupBooking->setUser($user->getUser());
+                        $groupBooking->setFlight($flight);
+                        $groupBooking->setClass($booking->getClass());
+                        $em->persist($groupBooking);
+
+                        $em->flush();
+                        array_push($array, $groupBooking->getId());
+                        $session->set('bookingIds', $array);
+                    }
+                    return $this->redirectToRoute('pick_seat',['bookingId' => $groupBooking->getId(), 'flightId' => $flightId, 'group' => 1]);
+                }
+                else {
+                    $booking->setCode(uniqid());
+                    $booking->setStatus('ongoing');
+                    $booking->setUser($this->getUser());
+                    $booking->setFlight($flight);;
+                    $em->persist($booking);
+                    $em->flush();
+                    return $this->redirectToRoute('pick_seat',['bookingId' => $booking->getId(), 'flightId' => $flightId, 'group' => 0]);
+                }
             }
         }
 
@@ -93,33 +116,39 @@ class UserController extends AbstractController
             'form' => $form->createView()
         ]);
     }
+
     /**
-     * @Route ("/user/flight/book/pick/seat/{bookingId}/{flightId}", name="pick_seat")
+     * @Route ("/user/flight/book/pick/seat/{bookingId}/{flightId}/{group}", name="pick_seat")
      */
-    public function pickSeat($bookingId,$flightId) {
+    public function pickSeat($bookingId,$flightId,$group, Request $request) {
         $r = $this->getDoctrine()->getRepository(Flight::class);
         $re = $this->getDoctrine()->getRepository(Booking::class);
         $booking = $re->findOneBy(['id' => $bookingId]);
         $flight = $r->findOneBy(['id' => $flightId]);
-
         $seats = $flight->getSeats();
         return $this->render('user/pickSeat.html.twig',[
             'seats' => $seats,
             'booking' => $booking,
+            'group' => $group
         ]);
     }
+    //for the lonely people
     /**
-     * @Route ("/user/process/seat/booking/{seatId}/{bookingId}", name="processBooking")
+     * @Route ("/user/process/seat/booking/", name="processBooking")
      */
-    public function processBooking($seatId, $bookingId, Request $request) {
-        $r= $this->getDoctrine()->getRepository(Seat::class);
+    public function processBooking(Request $request,RequestStack $stack) {
+        $r = $this->getDoctrine()->getRepository(Seat::class);
         $re = $this->getDoctrine()->getRepository(Booking::class);
-        $session = $request->getSession();
-
-        $booking = $re->findOneBy(['id' => $bookingId]);
-        $seat = $r->findOneBy(['id' => $seatId]);
 
         $em = $this->getDoctrine()->getManager();
+
+        $query = $stack->getCurrentRequest()->query;
+        $seatId= $query->get('seatId');
+        $bookingId = $query->get('bookingId');
+
+        $session = $request->getSession();
+        $booking = $re->findOneBy(['id' => $bookingId]);
+        $seat = $r->findOneBy(['id' => $seatId]);
 
         $seat->setBooking($booking);
         $em->persist($seat);
@@ -129,12 +158,49 @@ class UserController extends AbstractController
             $session->set('hasLooped', true);
             $session->set('beginBooking', $booking);
 
-            return $this->render('searchFlightResults.html.twig',[
+            return $this->render('searchFlightResults.html.twig', [
                 'flights' => $session->get('returnFlights')
             ]);
         }
+        else {
+            return $this->redirectToRoute('user_bookings');
+        }
+    }
 
-        return $this->redirectToRoute('user_bookings');
+    //This is the route for a group booking
+    /**
+     * @Route ("/user/process/seat/group/", name="processGroupBooking")
+     */
+    public function processGroupBooking(Request $request,RequestStack $stack) {
+        $session = $request->getSession();
+
+        $query = $stack->getCurrentRequest()->query;
+        $seatId= $query->get('seatId');
+
+        $re = $this->getDoctrine()->getRepository(Seat::class);
+        $rep = $this->getDoctrine()->getRepository(Booking::class);
+        $em= $this->getDoctrine()->getManager();
+        $seat = $re->findOneBy(['id' => $seatId]);
+
+            for ($i = 1; $i < count($session->get('bookingIds')); $i++) {
+
+                $bookingId = $session->get('bookingIds')[$i];
+                $booking = $rep->findOneBy(['id' => $bookingId]);
+                $seat->setBooking($booking);
+
+                $em->persist($seat);
+                $em->flush();
+
+                $array = $session->get('bookingIds');
+
+                unset($array[$i]);
+                $goodIndex = array_values($array);
+
+                $session->set('bookingIds',$goodIndex);
+                return $this->redirectToRoute('pick_seat',['flightId' => $booking->getFlight()->getId(),'bookingId' => $bookingId,'group' => 1]);
+            }
+//        return $this->render('user/userBookings.html.twig');
+        return $this->redirectToRoute("homepage");
     }
 
     /**
@@ -143,16 +209,20 @@ class UserController extends AbstractController
     public function userBookings(Request $request) {
         $r = $this->getDoctrine()->getRepository(Booking::class);
         $bookings = $r->findBy(['user' => $this->getUser()]);
+        $em = $this->getDoctrine()->getManager();
         foreach ($bookings as $booking) {
-            if($booking->getSeats()[0] == null) {
-                $em= $this->getDoctrine()->getManager();
-                $booking->setStatus('cancelled');
+            foreach ($booking->getSeats() as $seat) {
 
-                if ($booking->getFlightMessage() == 'User has cancelled their booking') {
-                    null;
-                }
-                else {
-                    $booking->setFlightMessage('Seat was not chosen');
+                if ($seat == null) {
+
+                    $booking->setStatus('cancelled');
+
+                    if ($booking->getFlightMessage() == 'User has cancelled their booking') {
+                        null;
+                    }
+                    else {
+                        $booking->setFlightMessage('Seat was not chosen');
+                    }
                 }
 
                 $em->persist($booking);
@@ -190,16 +260,19 @@ class UserController extends AbstractController
     /**
      * @Route("/user/bookings/delete/{bookingId}", name="delete_booking")
      */
-    public function deleteBooking($bookingId) {
+    public function deleteBooking($bookingId){
         $r = $this->getDoctrine()->getRepository(Booking::class);
         $booking = $r->findOneBy(['id' => $bookingId]);
         $em = $this->getDoctrine()->getManager();
 
-        if ($booking->getSeats()[0] != null) {
-            $booking->removeSeat($booking->getSeats()[0]);
-            $em->persist($booking);
-            $em->flush();
+        foreach ($booking->getSeats() as $seat) {
+            if ($seat != null) {
+                $booking->removeSeat($seat);
+                $em->persist($booking);
+                $em->flush();
+            }
         }
+
         $em->remove($booking);
         $em->flush();
         return $this->redirectToRoute('user_bookings');
@@ -211,7 +284,6 @@ class UserController extends AbstractController
     public function compare(RequestStack $request)
     {
         $session = new Session();
-
         $em = $this->getDoctrine()->getManager();
 
         $query = $request->getCurrentRequest()->query;
@@ -225,7 +297,7 @@ class UserController extends AbstractController
             // 1 vlucht
             $flights = $em->getRepository(Flight::class)->findBy(["beginAirport"=>$beginAirport,"destination"=>$destination,"date"=> new \DateTime($date),'status' => 'active']);
             $session->remove('returnFlights');
-            $session->remove('hasLooped');
+            $session->set('hasLooped', false);
             return $this->render('searchFlightResults.html.twig',['flights' => $flights]);
 
         }
